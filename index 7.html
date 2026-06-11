@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC426 - Practical Work</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 30px; }
+  h1 { text-align: center; margin-bottom: 30px; font-size: 20px; color: #111; }
+  .container { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+  .box { background: white; border: 2px solid #111; padding: 20px; width: 300px; }
+  .box h2 { font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 8px; }
+  .display { width: 100%; border: 1px solid #999; padding: 10px; font-size: 22px; text-align: right; margin-bottom: 10px; background: #fafafa; min-height: 45px; word-break: break-all; }
+  .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .btn { padding: 12px; font-size: 15px; border: 1px solid #555; background: white; cursor: pointer; }
+  .btn:hover { background: #eee; }
+  .btn.op { background: #f0f0f0; }
+  .btn.eq { background: #111; color: white; grid-column: span 2; }
+  .btn.eq:hover { background: #333; }
+  .btn.cl { background: #ddd; }
+  label { display: block; font-size: 14px; margin-bottom: 4px; margin-top: 12px; }
+  input[type="text"], input[type="password"] { width: 100%; padding: 9px; border: 1px solid #999; font-size: 14px; }
+  input[type="text"]:focus, input[type="password"]:focus { outline: 2px solid #111; }
+  .btn-row { display: flex; gap: 10px; margin-top: 15px; }
+  .sbtn { flex: 1; padding: 10px; font-size: 14px; border: 1px solid #111; cursor: pointer; background: #111; color: white; }
+  .sbtn:hover { background: #333; }
+  .rbtn { flex: 1; padding: 10px; font-size: 14px; border: 1px solid #999; cursor: pointer; background: white; }
+  .rbtn:hover { background: #eee; }
+  .msg { margin-top: 12px; font-size: 13px; padding: 8px; display: none; }
+  .msg.ok { border: 1px solid #333; background: #f0f0f0; }
+  .msg.err { border: 1px solid #333; background: #fff0f0; color: #900; }
+  .err-text { font-size: 12px; color: #c00; display: none; margin-top: 3px; }
+</style>
+</head>
+<body>
+<h1>CSC426 Practical Works</h1>
+<div class="container">
+
+  <div class="box">
+    <h2>Task 1 - Calculator</h2>
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+      <button class="btn cl" onclick="clearCalc()">C</button>
+      <button class="btn op" onclick="appendOp('%')">%</button>
+      <button class="btn op" onclick="appendOp('^')">^</button>
+      <button class="btn op" onclick="appendOp('/')">&#247;</button>
+      <button class="btn" onclick="appendNum('7')">7</button>
+      <button class="btn" onclick="appendNum('8')">8</button>
+      <button class="btn" onclick="appendNum('9')">9</button>
+      <button class="btn op" onclick="appendOp('*')">&#215;</button>
+      <button class="btn" onclick="appendNum('4')">4</button>
+      <button class="btn" onclick="appendNum('5')">5</button>
+      <button class="btn" onclick="appendNum('6')">6</button>
+      <button class="btn op" onclick="appendOp('-')">-</button>
+      <button class="btn" onclick="appendNum('1')">1</button>
+      <button class="btn" onclick="appendNum('2')">2</button>
+      <button class="btn" onclick="appendNum('3')">3</button>
+      <button class="btn op" onclick="appendOp('+')">+</button>
+      <button class="btn" onclick="appendNum('0')">0</button>
+      <button class="btn" onclick="appendNum('.')">.</button>
+      <button class="btn eq" onclick="calculate()">=</button>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>Task 2 - Login</h2>
+    <label for="uname">Username</label>
+    <input type="text" id="uname" placeholder="Enter username">
+    <span class="err-text" id="uname-err">Username is required</span>
+    <label for="pass">Password</label>
+    <input type="password" id="pass" placeholder="Enter password">
+    <span class="err-text" id="pass-err">Password must be at least 6 characters</span>
+    <div class="btn-row">
+      <button class="sbtn" onclick="doLogin()">Login</button>
+      <button class="rbtn" onclick="doReset()">Reset</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+</div>
+<script>
+  let expr = '';
+  let justCalc = false;
+
+  function updateDisplay(val) {
+    document.getElementById('display').textContent = val || '0';
+  }
+
+  function appendNum(n) {
+    if (justCalc) { expr = ''; justCalc = false; }
+    if (n === '.' && expr.split(/[\+\-\*\/\%\^]/).pop().includes('.')) return;
+    expr += n;
+    updateDisplay(expr);
+  }
+
+  function appendOp(op) {
+    justCalc = false;
+    if (expr === '' && op !== '-') return;
+    if (expr && '+-*/%^'.includes(expr.slice(-1))) expr = expr.slice(0, -1);
+    expr += op;
+    updateDisplay(expr);
+  }
+
+  function clearCalc() {
+    expr = '';
+    justCalc = false;
+    updateDisplay('0');
+  }
+
+  function calculate() {
+    if (!expr) return;
+    try {
+      let e = expr.replace(/\^/g, '**');
+      let result = Function('"use strict"; return (' + e + ')')();
+      if (!isFinite(result)) { updateDisplay('Error'); expr = ''; return; }
+      result = parseFloat(result.toFixed(10));
+      expr = String(result);
+      updateDisplay(expr);
+      justCalc = true;
+    } catch(e) {
+      updateDisplay('Error');
+      expr = '';
+    }
+  }
+
+  function doLogin() {
+    let u = document.getElementById('uname').value.trim();
+    let p = document.getElementById('pass').value;
+    let ue = document.getElementById('uname-err');
+    let pe = document.getElementById('pass-err');
+    let msg = document.getElementById('msg');
+    ue.style.display = 'none';
+    pe.style.display = 'none';
+    msg.style.display = 'none';
+    msg.className = 'msg';
+    let valid = true;
+    if (!u) { ue.style.display = 'block'; valid = false; }
+    if (p.length < 6) { pe.style.display = 'block'; valid = false; }
+    if (!valid) return;
+    if (u === 'admin' && p === 'admin123') {
+      msg.textContent = 'Login successful! Welcome, ' + u + '.';
+      msg.className = 'msg ok';
+    } else {
+      msg.textContent = 'Invalid username or password.';
+      msg.className = 'msg err';
+    }
+    msg.style.display = 'block';
+  }
+
+  function doReset() {
+    document.getElementById('uname').value = '';
+    document.getElementById('pass').value = '';
+    document.getElementById('uname-err').style.display = 'none';
+    document.getElementById('pass-err').style.display = 'none';
+    let msg = document.getElementById('msg');
+    msg.style.display = 'none';
+    msg.className = 'msg';
+  }
+</script>
+</body>
+</html>
